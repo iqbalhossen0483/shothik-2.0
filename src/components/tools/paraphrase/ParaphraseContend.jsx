@@ -1,7 +1,7 @@
 "use client";
 import { InsertDriveFile } from "@mui/icons-material";
 import { Box, Card, Divider, Grid2 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import { modes } from "../../../_mock/tools/paraphrase";
@@ -21,6 +21,7 @@ import OutputBotomNavigation from "./OutputBotomNavigation";
 import ParaphraseEditor from "./ParaphraseEditor";
 import ParaphraseOutput from "./ParaphraseOutput";
 import ViewInputInOutAsDemo from "./ViewInputInOutputAsDemo";
+import UserInputBox from "./UserInputBox";
 
 const SYNONYMS = {
   20: "Basic",
@@ -280,7 +281,7 @@ const ParaphraseContend = () => {
             }}
             size={{ xs: 12, md: 6 }}
           >
-            <ParaphraseEditor
+            {/* <ParaphraseEditor
               freezeWords={freezeWords}
               html={userInput}
               isMobile={isMobile}
@@ -289,7 +290,8 @@ const ParaphraseContend = () => {
               user={user}
               updateHtml={updateHtml}
               wordLimit={wordLimit}
-            />
+            /> */}
+            <UserInputBox />
 
             {!userInput ? (
               <UserActionInput
@@ -306,7 +308,7 @@ const ParaphraseContend = () => {
               isLoading={isLoading}
               userInput={userInput}
               userPackage={user?.package}
-              toolName='paraphrase'
+              toolName="paraphrase"
               btnIcon={isMobile ? null : <InsertDriveFile />}
               sx={{ py: 0 }}
               dontDisable={true}

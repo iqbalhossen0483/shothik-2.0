@@ -207,7 +207,7 @@ const ParaphraseEditor = ({
           onMouseUp={handleMouseUp}
           onPaste={handlePaste}
           onChange={(e) => handleChange(e.target.value)}
-          tagName='div'
+          tagName="div"
           className={style.content_editable}
         />
       </div>
@@ -217,7 +217,7 @@ const ParaphraseEditor = ({
         open={open}
         anchorEl={anchorEl}
         transition
-        placement='top'
+        placement="top"
       >
         {({ TransitionProps }) => (
           <Fade {...TransitionProps} timeout={350}>

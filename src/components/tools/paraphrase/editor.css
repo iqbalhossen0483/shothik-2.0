@@ -1,0 +1,65 @@
+/* Remove default margins from the editor container */
+.ProseMirror {
+  outline: none;
+  min-height: 150px;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0; /* Remove margin from editor */
+}
+
+/* Remove margins from all paragraph elements */
+.ProseMirror p {
+  margin: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+/* Remove margins from headings */
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  margin: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+/* Remove margins from lists */
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-left: 1.5rem; /* Keep some padding for list indentation */
+}
+
+/* Remove margins from list items */
+.ProseMirror li {
+  margin: 0;
+}
+
+/* Remove margins from blockquotes */
+.ProseMirror blockquote {
+  margin: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-left: 1rem;
+  border-left: 2px solid #ccc;
+}
+
+/* Placeholder style */
+.ProseMirror p.is-empty::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Style for words that exceed the limit */
+.word-limit-exceeded {
+  color: gray;
+  opacity: 0.6;
+}
