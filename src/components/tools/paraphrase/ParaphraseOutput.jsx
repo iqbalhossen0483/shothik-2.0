@@ -28,6 +28,7 @@ const ParaphraseOutput = ({
   activeSentence,
   isInputFoucus,
   setIsOutputFoucus,
+  isOutputFoucus,
 }) => {
   const [paraphraseForTagging] = useParaphraseForTaggingMutation();
   const [reportForSentence] = useReportForSentenceMutation();
@@ -231,6 +232,7 @@ const ParaphraseOutput = ({
         activeSentence={activeSentence}
         isInputFoucus={isInputFoucus}
         setIsOutputFoucus={setIsOutputFoucus}
+        isOutputFoucus={isOutputFoucus}
       />
 
       <Synonyms

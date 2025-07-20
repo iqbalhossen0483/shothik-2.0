@@ -71,6 +71,7 @@ const EditableOutput = ({
   activeSentence,
   isInputFoucus,
   setIsOutputFoucus,
+  isOutputFoucus,
 }) => {
   const theme = useTheme();
   const dark = theme.palette.mode === "dark";
@@ -112,12 +113,13 @@ const EditableOutput = ({
   }, [editor, data]);
 
   useEffect(() => {
-    if (isInputFoucus) {
+    if (!editor) return;
+    if (!isOutputFoucus && activeSentence) {
       editor.commands.setContent(
         generateFormatedText(data, activeSentence, dark)
       );
     }
-  }, [activeSentence]);
+  }, [editor, activeSentence]);
 
   useEffect(() => {
     if (!editor) return;

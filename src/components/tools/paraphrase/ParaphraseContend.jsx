@@ -360,6 +360,7 @@ const ParaphraseContend = () => {
                 setActiveSentence={setActiveSentence}
                 setIsInputFoucus={setIsInputFoucus}
                 isOutputFoucus={isOutputFoucus}
+                isInputFoucus={isInputFoucus}
               />
 
               {!userInput ? (
@@ -453,6 +454,7 @@ const ParaphraseContend = () => {
                       activeSentence={activeSentence}
                       isInputFoucus={isInputFoucus}
                       setIsOutputFoucus={setIsOutputFoucus}
+                      isOutputFoucus={isOutputFoucus}
                     />
                     <OutputBotomNavigation
                       handleClear={handleClear}

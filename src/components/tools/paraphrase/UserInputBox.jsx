@@ -49,6 +49,7 @@ function UserInputBox({
   setActiveSentence,
   setIsInputFoucus,
   isOutputFoucus,
+  isInputFoucus,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
@@ -140,12 +141,13 @@ function UserInputBox({
   }, [formatedSentences, editor]);
 
   useEffect(() => {
-    if (isOutputFoucus) {
+    if (!editor) return;
+    if (activeSentence && !isInputFoucus) {
       editor.commands.setContent(
         generateFormatedSentences(formatedSentences, activeSentence)
       );
     }
-  }, [activeSentence]);
+  }, [editor, activeSentence]);
 
   useEffect(() => {
     if (!editor) return;
