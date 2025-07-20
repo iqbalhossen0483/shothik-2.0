@@ -14,11 +14,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
-import { modes } from "../../../_mock/tools/paraphrase";
 import { trySamples } from "../../../_mock/trySamples";
 import { trackEvent } from "../../../analysers/eventTracker";
 import { detectLanguage } from "../../../hooks/languageDitector";
-import useDebounce from "../../../hooks/useDebounce";
 import useResponsive from "../../../hooks/useResponsive";
 import useSetState from "../../../hooks/useSetState";
 import useSnackbar from "../../../hooks/useSnackbar";
@@ -36,7 +34,9 @@ import ParaphraseOutput from "./ParaphraseOutput";
 import UpdateComponent from "./UpdateComponent";
 import UserInputBox from "./UserInputBox";
 import VerticalMenu from "./VerticalMenu";
+import ViewInputInOutAsDemo from "./ViewInputInOutputAsDemo";
 
+import { modes } from "../../../_mock/tools/paraphrase";
 import { protectedPhrases, protectedSingleWords } from "./extentions";
 
 const SYNONYMS = {
@@ -53,9 +53,12 @@ const ParaphraseContend = () => {
   const [selectedSynonyms, setSelectedSynonyms] = useState(SYNONYMS[20]);
   const [showLanguageDetect, setShowLanguageDetect] = useState(false);
   const [outputHistoryIndex, setOutputHistoryIndex] = useState(0);
-  const [highlightSentence, setHighlightSentence] = useState(0);
+  const [formatedSentences, setFormatedSentences] = useState([]);
   const [selectedMode, setSelectedMode] = useState("Standard");
   const [outputWordCount, setOutputWordCount] = useState(0);
+  const [isInputFoucus, setIsInputFoucus] = useState(false);
+  const [isOutputFoucus, setIsOutputFoucus] = useState(false);
+  const [activeSentence, setActiveSentence] = useState(-1);
   const [outputHistory, setOutputHistory] = useState([]);
   const [outputContend, setOutputContend] = useState("");
   const { user } = useSelector((state) => state.auth);
@@ -66,7 +69,7 @@ const ParaphraseContend = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { wordLimit } = useWordLimit("paraphrase");
   const [userInput, setUserInput] = useState("");
-  const userInputValue = useDebounce(userInput, 800);
+  // const userInputValue = useDebounce(userInput, 800);
   const [socketId, setSocketId] = useState(null);
   const [paraphrased] = useParaphrasedMutation();
   const [eventId, setEventId] = useState(null);
@@ -245,6 +248,15 @@ const ParaphraseContend = () => {
 
       await paraphrased(payload).unwrap();
 
+      const separator = language === "Bangla" ? "। " : ". ";
+      const sentences = finalText
+        .split(separator)
+        .map((s, i, arr) =>
+          (s + (i === arr.length - 1 ? "" : separator)).trim()
+        );
+
+      setFormatedSentences(sentences);
+
       if (isMobile && outputRef.current) {
         outputRef.current.scrollIntoView({
           behavior: "smooth",
@@ -268,11 +280,11 @@ const ParaphraseContend = () => {
     }
   };
 
-  useEffect(() => {
-    if (userInputValue && !processing.loading) {
-      handleSubmit(userInputValue);
-    }
-  }, [userInputValue]);
+  // useEffect(() => {
+  //   if (userInputValue && !processing.loading) {
+  //     handleSubmit(userInputValue);
+  //   }
+  // }, [userInputValue]);
 
   return (
     <Box>
@@ -343,6 +355,11 @@ const ParaphraseContend = () => {
                 frozenPhrases={frozenPhrases}
                 frozenWords={frozenWords}
                 user={user}
+                activeSentence={activeSentence}
+                formatedSentences={formatedSentences}
+                setActiveSentence={setActiveSentence}
+                setIsInputFoucus={setIsInputFoucus}
+                isOutputFoucus={isOutputFoucus}
               />
 
               {!userInput ? (
@@ -398,7 +415,7 @@ const ParaphraseContend = () => {
                   flexDirection: "column",
                 }}
               >
-                {/* <div style={{ color: "darkgray", paddingLeft: 15 }}>
+                <div style={{ color: "darkgray", paddingLeft: 15 }}>
                   {isLoading ? (
                     <ViewInputInOutAsDemo
                       input={userInput}
@@ -407,42 +424,17 @@ const ParaphraseContend = () => {
                   ) : !result.length ? (
                     <p>Paraphrased Text</p>
                   ) : null}
-                </div> */}
-
-                <ParaphraseOutput
-                  data={result}
-                  setData={setResult}
-                  synonymLevel={selectedSynonyms}
-                  dataModes={modes}
-                  userPackage={user?.package}
-                  selectedLang={language}
-                  highlightSentence={highlightSentence}
-                  setOutputHistory={setOutputHistory}
-                  input={userInput}
-                  freezeWords={
-                    frozenWords.size > 0
-                      ? frozenWords.values.join(", ")
-                      : frozenPhrases.size > 0
-                      ? frozenPhrases.values.join(", ")
-                      : ""
-                  }
-                  socketId={socketId}
-                  language={language}
-                  setProcessing={setProcessing}
-                  eventId={eventId}
-                  setEventId={setEventId}
-                />
+                </div>
 
                 {result.length ? (
                   <>
-                    {/* <ParaphraseOutput
+                    <ParaphraseOutput
                       data={result}
                       setData={setResult}
                       synonymLevel={selectedSynonyms}
                       dataModes={modes}
                       userPackage={user?.package}
                       selectedLang={language}
-                      highlightSentence={highlightSentence}
                       setOutputHistory={setOutputHistory}
                       input={userInput}
                       freezeWords={
@@ -457,18 +449,22 @@ const ParaphraseContend = () => {
                       setProcessing={setProcessing}
                       eventId={eventId}
                       setEventId={setEventId}
-                    /> */}
+                      setActiveSentence={setActiveSentence}
+                      activeSentence={activeSentence}
+                      isInputFoucus={isInputFoucus}
+                      setIsOutputFoucus={setIsOutputFoucus}
+                    />
                     <OutputBotomNavigation
                       handleClear={handleClear}
-                      highlightSentence={highlightSentence}
                       outputContend={outputContend}
                       outputHistory={outputHistory}
                       outputHistoryIndex={outputHistoryIndex}
                       outputWordCount={outputWordCount}
                       proccessing={processing}
                       sentenceCount={result.length}
-                      setHighlightSentence={setHighlightSentence}
+                      setActiveSentence={setActiveSentence}
                       setOutputHistoryIndex={setOutputHistoryIndex}
+                      activeSentence={activeSentence}
                     />
                   </>
                 ) : null}

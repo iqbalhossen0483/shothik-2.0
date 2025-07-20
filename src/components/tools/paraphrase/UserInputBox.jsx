@@ -4,7 +4,38 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
 import "./editor.css";
-import { CombinedHighlighting } from "./extentions";
+import {
+  CombinedHighlighting,
+  CursorWatcher,
+  EnterWatcher,
+  SpanNode,
+} from "./extentions";
+
+function generateFormatedSentences(sentences, activeSentence) {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: sentences.map((sentence, sIndex) => ({
+          type: "spanNode",
+          attrs: {
+            "data-sentence-index": sIndex + 1,
+            class: `sentence-span ${
+              activeSentence === sIndex + 1 ? "active-sentence" : ""
+            }`,
+          },
+          content: [
+            {
+              type: "text",
+              text: sentence + (sentences.length - 1 === sIndex ? "" : " "),
+            },
+          ],
+        })),
+      },
+    ],
+  };
+}
 
 function UserInputBox({
   wordLimit = 300,
@@ -13,51 +44,76 @@ function UserInputBox({
   frozenWords,
   frozenPhrases,
   user,
+  activeSentence,
+  formatedSentences,
+  setActiveSentence,
+  setIsInputFoucus,
+  isOutputFoucus,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const [selectedWord, setSelectedWord] = useState("");
   const isInternalUpdate = useRef(false);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({ placeholder: "Enter your text here..." }),
-      CombinedHighlighting.configure({
-        limit: wordLimit,
-        frozenWords: frozenWords.set,
-        frozenPhrases: frozenPhrases.set,
-      }),
-    ],
-    content: "",
-    immediatelyRender: false,
-    onSelectionUpdate: ({ editor }) => {
-      const { from, to } = editor.state.selection;
-      const selectedText = editor.state.doc.textBetween(from, to, " ").trim();
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          enter: false,
+        }),
+        Placeholder.configure({ placeholder: "Enter your text here..." }),
+        CombinedHighlighting.configure({
+          limit: wordLimit,
+          frozenWords: frozenWords.set,
+          frozenPhrases: frozenPhrases.set,
+        }),
+        SpanNode,
+        EnterWatcher,
+        CursorWatcher.configure({
+          enabled: !isOutputFoucus,
+          onActiveSentenceChange: (index) => {
+            setActiveSentence(index);
+          },
+        }),
+      ],
+      content: "",
+      immediatelyRender: false,
+      onSelectionUpdate: ({ editor }) => {
+        const { from, to } = editor.state.selection;
+        const selectedText = editor.state.doc.textBetween(from, to, " ").trim();
 
-      if (selectedText && from !== to) {
-        setSelectedWord(selectedText);
+        if (selectedText && from !== to) {
+          setSelectedWord(selectedText);
 
-        setTimeout(() => {
-          const { view } = editor;
-          const start = view.coordsAtPos(from);
+          setTimeout(() => {
+            const { view } = editor;
+            const start = view.coordsAtPos(from);
 
-          setPopoverPosition({
-            top: start.bottom + window.scrollY,
-            left: start.left + window.scrollX,
-          });
+            setPopoverPosition({
+              top: start.bottom + window.scrollY,
+              left: start.left + window.scrollX,
+            });
 
-          setAnchorEl(document.body);
-        }, 10);
-      } else {
-        clearSelection();
-      }
+            setAnchorEl(document.body);
+          }, 10);
+        } else {
+          clearSelection();
+        }
+      },
+      onUpdate: ({ editor }) => {
+        isInternalUpdate.current = true;
+        setUserInput(editor.getText());
+      },
+      onFocus: () => {
+        setIsInputFoucus(true);
+      },
+
+      onBlur: () => {
+        setIsInputFoucus(false);
+      },
     },
-    onUpdate: ({ editor }) => {
-      isInternalUpdate.current = true;
-      setUserInput(editor.getText());
-    },
-  });
+    [isOutputFoucus]
+  );
 
   const clearSelection = () => {
     setAnchorEl(null);
@@ -74,6 +130,22 @@ function UserInputBox({
     }
     isInternalUpdate.current = false; // reset flag
   }, [userInput, editor]);
+
+  useEffect(() => {
+    if (editor && formatedSentences.length) {
+      editor.commands.setContent(
+        generateFormatedSentences(formatedSentences, activeSentence)
+      );
+    }
+  }, [formatedSentences, editor]);
+
+  useEffect(() => {
+    if (isOutputFoucus) {
+      editor.commands.setContent(
+        generateFormatedSentences(formatedSentences, activeSentence)
+      );
+    }
+  }, [activeSentence]);
 
   useEffect(() => {
     if (!editor) return;

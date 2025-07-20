@@ -1,7 +1,9 @@
 import { Extension } from "@tiptap/core";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { Node } from "@tiptap/react";
+import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
 
+// ---------------------- user input box  extension start ----------------------
 function processDecorations(doc, { limit, frozenWords, frozenPhrases }) {
   const decorations = [];
   const sentenceMap = new Map();
@@ -89,18 +91,15 @@ function processDecorations(doc, { limit, frozenWords, frozenPhrases }) {
 
   return DecorationSet.create(doc, decorations);
 }
-
 function isOverlapping(from, to, set) {
   for (let i = from; i < to; i++) {
     if (set.has(i)) return true;
   }
   return false;
 }
-
 function markDecorated(from, to, set) {
   for (let i = from; i < to; i++) set.add(i);
 }
-
 export const CombinedHighlighting = Extension.create({
   name: "combinedHighlighting",
 
@@ -126,7 +125,136 @@ export const CombinedHighlighting = Extension.create({
     ];
   },
 });
+export const EnterWatcher = Extension.create({
+  name: "enterWatcher",
 
+  addKeyboardShortcuts() {
+    return {
+      Enter: ({ editor }) => {
+        const { state, view } = editor;
+        const { tr, selection, doc, schema } = state;
+        const { from } = selection;
+
+        // === Step 1: Count current sentenceNode to generate index ===
+        let maxIndex = 0;
+        doc.descendants((node) => {
+          if (node.type.name === "spanNode") {
+            const index = parseInt(node.attrs["data-sentence-index"]);
+            if (!isNaN(index) && index > maxIndex) {
+              maxIndex = index;
+            }
+          }
+        });
+
+        const nextSentenceIndex = maxIndex + 1;
+
+        const sentenceNode = schema.nodes.spanNode.create(
+          {
+            "data-sentence-index": nextSentenceIndex,
+            class: "sentence-span",
+          },
+          []
+        );
+
+        const paragraphNode = schema.nodes.paragraph.create({}, [sentenceNode]);
+
+        const newTr = tr.insert(from, paragraphNode);
+
+        // === Step 3: Move cursor into the new wordNode ===
+        const resolvedPos = newTr.doc.resolve(from + 3); // Rough offset
+        const newSelection = TextSelection.near(resolvedPos);
+
+        view.dispatch(newTr.setSelection(newSelection).scrollIntoView());
+
+        return true;
+      },
+    };
+  },
+});
+export const CursorWatcher = Extension.create({
+  name: "cursorWatcher",
+
+  addOptions() {
+    return {
+      enabled: true,
+      onActiveSentenceChange: () => {},
+    };
+  },
+
+  addProseMirrorPlugins() {
+    const { onActiveSentenceChange, enabled } = this.options;
+    return [
+      new Plugin({
+        props: {
+          decorations(state) {
+            // Check if extension is enabled
+            if (!enabled) {
+              return DecorationSet.empty;
+            }
+
+            const { from, empty } = state.selection;
+            if (!empty) return null;
+
+            const decorations = [];
+            let foundIndex = -1;
+
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === "spanNode") {
+                const sentenceStart = pos;
+                const sentenceEnd = pos + node.nodeSize;
+
+                if (from >= sentenceStart && from <= sentenceEnd) {
+                  foundIndex =
+                    parseInt(node.attrs["data-sentence-index"]) || -1;
+                  decorations.push(
+                    Decoration.node(sentenceStart, sentenceEnd, {
+                      class: "active-sentence",
+                    })
+                  );
+                }
+              }
+            });
+            // ✅ Call the React callback
+            onActiveSentenceChange?.(foundIndex);
+
+            return DecorationSet.create(state.doc, decorations);
+          },
+        },
+      }),
+    ];
+  },
+});
+
+export const SpanNode = Node.create({
+  name: "spanNode",
+
+  group: "inline",
+  inline: true,
+  content: "text*",
+
+  addAttributes() {
+    return {
+      "data-sentence-index": {
+        default: null,
+      },
+      class: {
+        default: "sentence-span",
+      },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "span.sentence-span" }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["span", HTMLAttributes, 0];
+  },
+});
+
+// --------------------- user input box extension end ---------------------------
+
+// --------------------- output editor extension start --------------------------
 const getColorStyle = (type, dark = false) => {
   const adJectiveVerbAdverbColor = dark ? "#ef5c47" : "#d95645";
   const nounColor = dark ? "#b6bdbd" : "#530a78";
@@ -139,8 +267,6 @@ const getColorStyle = (type, dark = false) => {
   if (/freeze/.test(type)) return freezeColor;
   return "inherit";
 };
-
-// output editor
 export const wordSentenceDecorator = (data, activeSentenceIndexes = []) => {
   return new Plugin({
     key: new PluginKey("wordSentenceDecorator"),
@@ -194,6 +320,182 @@ export const wordSentenceDecorator = (data, activeSentenceIndexes = []) => {
     },
   });
 };
+
+export const SentenceNode = Node.create({
+  name: "sentenceNode",
+
+  group: "inline",
+  inline: true,
+  content: "wordNode*",
+
+  addAttributes() {
+    return {
+      "data-sentence-index": {
+        default: null,
+      },
+      class: {
+        default: "sentence-span",
+      },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "span.sentence-span" }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["span", HTMLAttributes, 0];
+  },
+});
+export const WordNode = Node.create({
+  name: "wordNode",
+
+  group: "inline",
+  inline: true,
+  content: "text*",
+
+  addAttributes() {
+    return {
+      "data-sentence-index": { default: null },
+      "data-word-index": { default: null },
+      "data-type": { default: null },
+      class: { default: "word-span" },
+      style: { default: null },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "span.word-span" }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["span", HTMLAttributes, 0];
+  },
+});
+export const EnterHandler = Extension.create({
+  name: "enterHandler",
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: ({ editor }) => {
+        const { state, view } = editor;
+        const { tr, selection, doc, schema } = state;
+        const { from } = selection;
+
+        // === Step 1: Count current sentenceNode to generate index ===
+        let maxIndex = 0;
+        doc.descendants((node) => {
+          if (node.type.name === "sentenceNode") {
+            const index = parseInt(node.attrs["data-sentence-index"]);
+            if (!isNaN(index) && index > maxIndex) {
+              maxIndex = index;
+            }
+          }
+        });
+
+        const nextSentenceIndex = maxIndex + 1;
+
+        // === Step 2: Create new sentenceNode with one wordNode ===
+        const wordNode = schema.nodes.wordNode.create(
+          {
+            "data-sentence-index": nextSentenceIndex,
+            "data-word-index": 1,
+            "data-type": "",
+            class: "word-span",
+            style: "color:inherit;cursor:pointer",
+          },
+          schema.text(" ") // <-- Use non-breaking space to avoid RangeError
+        );
+
+        const sentenceNode = schema.nodes.sentenceNode.create(
+          {
+            "data-sentence-index": nextSentenceIndex,
+            class: "sentence-span",
+          },
+          [wordNode]
+        );
+
+        const paragraphNode = schema.nodes.paragraph.create({}, [sentenceNode]);
+
+        const newTr = tr.insert(from, paragraphNode);
+
+        // === Step 3: Move cursor into the new wordNode ===
+        const resolvedPos = newTr.doc.resolve(from + 3); // Rough offset
+        const newSelection = TextSelection.near(resolvedPos);
+
+        view.dispatch(newTr.setSelection(newSelection).scrollIntoView());
+
+        return true;
+      },
+    };
+  },
+});
+
+export const CursorHandler = Extension.create({
+  name: "cursorHandler",
+
+  addOptions() {
+    return {
+      onActiveSentenceChange: () => {},
+      activeSentence: -1,
+      enabled: true,
+    };
+  },
+
+  addProseMirrorPlugins() {
+    const { onActiveSentenceChange, activeSentence, enabled } = this.options;
+
+    return [
+      new Plugin({
+        props: {
+          decorations: (state) => {
+            // Check if extension is enabled
+            if (!enabled) {
+              return DecorationSet.empty;
+            }
+
+            const { from, empty } = state.selection;
+            if (!empty) return DecorationSet.empty;
+
+            const decorations = [];
+            let foundIndex = -1;
+
+            state.doc.descendants((node, pos) => {
+              if (
+                activeSentence &&
+                node.type.name === "sentenceNode" &&
+                parseInt(node.attrs["data-sentence-index"]) === activeSentence
+              ) {
+                decorations.push(
+                  Decoration.node(pos, pos + node.nodeSize, {
+                    class: "active-sentence",
+                  })
+                );
+              } else if (node.type.name === "sentenceNode") {
+                const sentenceStart = pos;
+                const sentenceEnd = pos + node.nodeSize;
+
+                if (from >= sentenceStart && from <= sentenceEnd) {
+                  foundIndex =
+                    parseInt(node.attrs["data-sentence-index"]) || -1;
+                  decorations.push(
+                    Decoration.node(sentenceStart, sentenceEnd, {
+                      class: "active-sentence",
+                    })
+                  );
+                }
+              }
+            });
+
+            onActiveSentenceChange?.(foundIndex);
+            return DecorationSet.create(state.doc, decorations);
+          },
+        },
+      }),
+    ];
+  },
+});
+// -------------------- output editor extension end -----------------------------
 
 export const protectedSingleWords = [
   "affidavit",
@@ -960,4 +1262,14 @@ export const data = [
       synonyms: [],
     },
   ],
+];
+
+export const formatedSen = [
+  "This is a sentence.",
+  "Another line here.",
+  "The quick brown fox jumps.",
+  "JavaScript is very popular.",
+  "Good data requires careful thought.",
+  "Can you generate some code?",
+  "She writes with great clarity.",
 ];

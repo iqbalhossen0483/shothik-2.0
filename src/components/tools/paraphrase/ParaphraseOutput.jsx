@@ -17,7 +17,6 @@ const ParaphraseOutput = ({
   synonymLevel,
   userPackage,
   selectedLang,
-  highlightSentence,
   setOutputHistory,
   freezeWords,
   socketId,
@@ -25,6 +24,10 @@ const ParaphraseOutput = ({
   setProcessing,
   eventId,
   setEventId,
+  setActiveSentence,
+  activeSentence,
+  isInputFoucus,
+  setIsOutputFoucus,
 }) => {
   const [paraphraseForTagging] = useParaphraseForTaggingMutation();
   const [reportForSentence] = useReportForSentenceMutation();
@@ -60,29 +63,6 @@ const ParaphraseOutput = ({
       return newData;
     });
     setSynonymsOptions(synonymInit);
-  };
-
-  const handleWordClick = (event, synonyms, sentenceIndex, wordIndex) => {
-    event.stopPropagation();
-
-    setAnchorEl(event.currentTarget);
-    setSynonymsOptions({
-      synonyms,
-      sentenceIndex,
-      wordIndex,
-      showRephraseNav: true,
-    });
-    const sentenceArr = data[sentenceIndex];
-    let sentence = "";
-    for (let i = 0; i < sentenceArr.length; i++) {
-      const word = sentenceArr[i].word;
-      if (/^[.,]$/.test(word)) {
-        sentence += word;
-      } else {
-        sentence += (sentence ? " " : "") + word;
-      }
-    }
-    setSentence(sentence);
   };
 
   const replaceSentence = async (sentenceData) => {
@@ -170,7 +150,8 @@ const ParaphraseOutput = ({
       setShowRephrase(true);
 
       const url =
-        process.env.NEXT_PUBLIC_PARAPHRASE_API_URI + "/paraphrase-with-variantV2";
+        process.env.NEXT_PUBLIC_PARAPHRASE_API_URI +
+        "/paraphrase-with-variantV2";
       const token = localStorage.getItem("accessToken");
       const payload = {
         text: sentence,
@@ -246,6 +227,10 @@ const ParaphraseOutput = ({
         setSynonymsOptions={setSynonymsOptions}
         setSentence={setSentence}
         setAnchorEl={setAnchorEl}
+        setActiveSentence={setActiveSentence}
+        activeSentence={activeSentence}
+        isInputFoucus={isInputFoucus}
+        setIsOutputFoucus={setIsOutputFoucus}
       />
 
       <Synonyms

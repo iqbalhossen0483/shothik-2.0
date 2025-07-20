@@ -11,15 +11,12 @@ import {
 } from "@mui/icons-material";
 import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import Image from "next/image";
-import React from "react";
 import useResponsive from "../../../hooks/useResponsive";
 import useSnackbar from "../../../hooks/useSnackbar";
 import WordIcon from "../../../resource/assets/WordIcon";
 import { downloadFile } from "../common/downloadfile";
 
 const OutputBotomNavigation = ({
-  setHighlightSentence,
-  highlightSentence,
   sentenceCount,
   outputWordCount,
   proccessing,
@@ -28,6 +25,8 @@ const OutputBotomNavigation = ({
   outputHistory,
   handleClear,
   outputContend,
+  activeSentence,
+  setActiveSentence,
 }) => {
   const enqueueSnackbar = useSnackbar();
   const isMobile = useResponsive("down", "sm");
@@ -62,8 +61,8 @@ const OutputBotomNavigation = ({
         <Stack direction='row' spacing={0.5} alignItems='center'>
           <Tooltip title='Previous sentence' arrow placement='top'>
             <IconButton
-              onClick={() => setHighlightSentence((prev) => prev - 1)}
-              disabled={highlightSentence === 0}
+              onClick={() => setActiveSentence((prev) => prev - 1)}
+              disabled={activeSentence === 1 || activeSentence === -1}
               color='primary'
               size='small'
               aria-label='delete'
@@ -77,13 +76,13 @@ const OutputBotomNavigation = ({
           </Tooltip>
 
           <Typography sx={{ fontWeight: 600 }}>
-            <b>{highlightSentence + 1}</b>/{sentenceCount}
+            <b>{activeSentence}</b>/{sentenceCount}
           </Typography>
 
           <Tooltip title='Next sentence' arrow placement='top'>
             <IconButton
-              onClick={() => setHighlightSentence((prev) => prev + 1)}
-              disabled={highlightSentence === sentenceCount - 1}
+              onClick={() => setActiveSentence((prev) => prev + 1)}
+              disabled={activeSentence === sentenceCount}
               size='small'
               sx={{
                 bgcolor: "rgba(73, 149, 87, 0.04)",
