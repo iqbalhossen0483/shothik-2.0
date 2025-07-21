@@ -26,9 +26,9 @@ const ParaphraseOutput = ({
   setEventId,
   setActiveSentence,
   activeSentence,
-  isInputFoucus,
-  setIsOutputFoucus,
   isOutputFoucus,
+  setIsOutputFoucus,
+  isInputFoucus,
 }) => {
   const [paraphraseForTagging] = useParaphraseForTaggingMutation();
   const [reportForSentence] = useReportForSentenceMutation();
@@ -230,9 +230,10 @@ const ParaphraseOutput = ({
         setAnchorEl={setAnchorEl}
         setActiveSentence={setActiveSentence}
         activeSentence={activeSentence}
-        isInputFoucus={isInputFoucus}
-        setIsOutputFoucus={setIsOutputFoucus}
         isOutputFoucus={isOutputFoucus}
+        setIsOutputFoucus={setIsOutputFoucus}
+        isInputFoucus={isInputFoucus}
+        language={language}
       />
 
       <Synonyms

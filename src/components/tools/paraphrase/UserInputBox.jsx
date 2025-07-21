@@ -47,9 +47,10 @@ function UserInputBox({
   activeSentence,
   formatedSentences,
   setActiveSentence,
-  setIsInputFoucus,
   isOutputFoucus,
   isInputFoucus,
+  setIsInputFoucus,
+  language,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
@@ -133,21 +134,19 @@ function UserInputBox({
   }, [userInput, editor]);
 
   useEffect(() => {
-    if (editor && formatedSentences.length) {
-      editor.commands.setContent(
-        generateFormatedSentences(formatedSentences, activeSentence)
-      );
-    }
-  }, [formatedSentences, editor]);
-
-  useEffect(() => {
     if (!editor) return;
-    if (activeSentence && !isInputFoucus) {
+    const separator = language === "Bangla" ? "। " : ". ";
+    const newUserInput = userInput.split(separator).length;
+    const shouldUpdate =
+      formatedSentences.length === newUserInput &&
+      (!activeSentence || (activeSentence && !isInputFoucus));
+
+    if (shouldUpdate) {
       editor.commands.setContent(
         generateFormatedSentences(formatedSentences, activeSentence)
       );
     }
-  }, [editor, activeSentence]);
+  }, [editor, formatedSentences, activeSentence, isInputFoucus]);
 
   useEffect(() => {
     if (!editor) return;

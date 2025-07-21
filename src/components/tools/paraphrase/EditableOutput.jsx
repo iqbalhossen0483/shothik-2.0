@@ -1,7 +1,7 @@
 import { useTheme } from "@mui/material";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   CursorHandler,
   EnterHandler,
@@ -69,10 +69,12 @@ const EditableOutput = ({
   setAnchorEl,
   setActiveSentence,
   activeSentence,
-  isInputFoucus,
-  setIsOutputFoucus,
   isOutputFoucus,
+  setIsOutputFoucus,
+  isInputFoucus,
+  language,
 }) => {
+  const [input, setInput] = useState("");
   const theme = useTheme();
   const dark = theme.palette.mode === "dark";
   const editor = useEditor(
@@ -101,25 +103,42 @@ const EditableOutput = ({
       onBlur: () => {
         setIsOutputFoucus(false);
       },
+      onUpdate: ({ editor }) => {
+        setInput(editor.getText());
+      },
     },
     [isInputFoucus]
   );
 
   useEffect(() => {
     if (!editor || !data?.length) return;
-    editor.commands.setContent(
-      generateFormatedText(data, activeSentence, dark)
-    );
-  }, [editor, data]);
+    const separator = language === "Bangla" ? "। " : ". ";
+    const newInputCount = input.split(separator).length;
+    //data.length === newInputCount &&
+    const shouldUpdate = !activeSentence || (activeSentence && !isOutputFoucus);
 
-  useEffect(() => {
-    if (!editor) return;
-    if (!isOutputFoucus && activeSentence) {
+    if (shouldUpdate) {
       editor.commands.setContent(
         generateFormatedText(data, activeSentence, dark)
       );
     }
-  }, [editor, activeSentence]);
+  }, [editor, data, activeSentence, isOutputFoucus, dark]);
+
+  // useEffect(() => {
+  //   if (!editor || !data?.length) return;
+  //   editor.commands.setContent(
+  //     generateFormatedText(data, activeSentence, dark)
+  //   );
+  // }, [editor, data]);
+
+  // useEffect(() => {
+  //   if (!editor) return;
+  //   if (!isOutputFoucus && activeSentence) {
+  //     editor.commands.setContent(
+  //       generateFormatedText(data, activeSentence, dark)
+  //     );
+  //   }
+  // }, [editor, activeSentence]);
 
   useEffect(() => {
     if (!editor) return;

@@ -62,7 +62,7 @@ const OutputBotomNavigation = ({
           <Tooltip title='Previous sentence' arrow placement='top'>
             <IconButton
               onClick={() => setActiveSentence((prev) => prev - 1)}
-              disabled={activeSentence === 1 || activeSentence === -1}
+              disabled={activeSentence <= 1}
               color='primary'
               size='small'
               aria-label='delete'

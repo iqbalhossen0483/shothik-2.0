@@ -55,10 +55,10 @@ const ParaphraseContend = () => {
   const [outputHistoryIndex, setOutputHistoryIndex] = useState(0);
   const [formatedSentences, setFormatedSentences] = useState([]);
   const [selectedMode, setSelectedMode] = useState("Standard");
-  const [outputWordCount, setOutputWordCount] = useState(0);
-  const [isInputFoucus, setIsInputFoucus] = useState(false);
   const [isOutputFoucus, setIsOutputFoucus] = useState(false);
-  const [activeSentence, setActiveSentence] = useState(-1);
+  const [isInputFoucus, setIsInputFoucus] = useState(false);
+  const [outputWordCount, setOutputWordCount] = useState(0);
+  const [activeSentence, setActiveSentence] = useState(0);
   const [outputHistory, setOutputHistory] = useState([]);
   const [outputContend, setOutputContend] = useState("");
   const { user } = useSelector((state) => state.auth);
@@ -199,6 +199,8 @@ const ParaphraseContend = () => {
       setUserInput("");
       frozenWords.reset(initialFrozenWords);
       frozenPhrases.reset(initialFrozenPhrase);
+      setActiveSentence(0);
+      setFormatedSentences([]);
     }
     setResult([]);
     setOutputHistory([]);
@@ -210,28 +212,22 @@ const ParaphraseContend = () => {
       if (!value) {
         trackEvent("click", "paraphrase", "paraphrase_click", 1);
       }
-      let payload;
-
       setIsLoading(true);
       setResult([]);
       setOutputHistoryIndex(0);
       setProcessing({ success: false, loading: true });
 
-      const textToParaphrase = value ? value : userInput;
-      const textAsWrodsArray = textToParaphrase
+      const textAsWrodsArray = userInput
         .trim()
         .split(/\s+/)
         .filter((word) => word.length > 0);
       const finalText = textAsWrodsArray.slice(0, wordLimit).join(" ");
-      if (finalText > wordLimit) {
-        throw { error: "LIMIT_REQUEST", message: "Worads limit execed" };
-      }
 
       // generate uniqe 10 number randomly;
       const randomNumber = Math.floor(Math.random() * 10000000000);
       setEventId(`${socketId}-${randomNumber}`);
 
-      payload = {
+      const payload = {
         text: finalText,
         freeze:
           frozenWords.size > 0
@@ -254,7 +250,6 @@ const ParaphraseContend = () => {
         .map((s, i, arr) =>
           (s + (i === arr.length - 1 ? "" : separator)).trim()
         );
-
       setFormatedSentences(sentences);
 
       if (isMobile && outputRef.current) {
@@ -358,9 +353,10 @@ const ParaphraseContend = () => {
                 activeSentence={activeSentence}
                 formatedSentences={formatedSentences}
                 setActiveSentence={setActiveSentence}
-                setIsInputFoucus={setIsInputFoucus}
                 isOutputFoucus={isOutputFoucus}
                 isInputFoucus={isInputFoucus}
+                setIsInputFoucus={setIsInputFoucus}
+                language={language}
               />
 
               {!userInput ? (
@@ -452,9 +448,9 @@ const ParaphraseContend = () => {
                       setEventId={setEventId}
                       setActiveSentence={setActiveSentence}
                       activeSentence={activeSentence}
-                      isInputFoucus={isInputFoucus}
-                      setIsOutputFoucus={setIsOutputFoucus}
                       isOutputFoucus={isOutputFoucus}
+                      setIsOutputFoucus={setIsOutputFoucus}
+                      isInputFoucus={isInputFoucus}
                     />
                     <OutputBotomNavigation
                       handleClear={handleClear}
