@@ -20,11 +20,13 @@ export default function useSetState(initialValues = []) {
   }, []);
 
   const toggle = useCallback((value) => {
+    let nextSet;
     setSetState((prev) => {
-      const updated = new Set(prev);
-      updated.has(value) ? updated.delete(value) : updated.add(value);
-      return updated;
+      nextSet = new Set(prev);
+      nextSet.has(value) ? nextSet.delete(value) : nextSet.add(value);
+      return nextSet;
     });
+    return nextSet;
   }, []);
 
   const has = useCallback((value) => setState.has(value), [setState]);

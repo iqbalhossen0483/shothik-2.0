@@ -51,11 +51,12 @@ function UserInputBox({
   isInputFoucus,
   setIsInputFoucus,
   language,
+  clearInput,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const [selectedWord, setSelectedWord] = useState("");
-  const isInternalUpdate = useRef(false);
+  const internalUpdate = useRef(false);
 
   const editor = useEditor(
     {
@@ -78,7 +79,7 @@ function UserInputBox({
           },
         }),
       ],
-      content: "",
+      content: userInput,
       immediatelyRender: false,
       onSelectionUpdate: ({ editor }) => {
         const { from, to } = editor.state.selection;
@@ -103,8 +104,8 @@ function UserInputBox({
         }
       },
       onUpdate: ({ editor }) => {
-        isInternalUpdate.current = true;
         setUserInput(editor.getText());
+        internalUpdate.current = true;
       },
       onFocus: () => {
         setIsInputFoucus(true);
@@ -117,21 +118,47 @@ function UserInputBox({
     [isOutputFoucus]
   );
 
+  useEffect(() => {
+    if (!editor) return;
+    if (internalUpdate.current) {
+      internalUpdate.current = false;
+      return;
+    }
+    if (!userInput) return;
+    editor.commands.setContent(userInput);
+  }, [editor, userInput]);
+
+  const handleToggleFreeze = () => {
+    const key = selectedWord.toLowerCase().trim();
+    const isPhrase = key.includes(" ");
+    let newWordSet;
+    let newPhraseSet;
+    if (isPhrase) {
+      newPhraseSet = frozenPhrases.toggle(key);
+    } else {
+      newWordSet = frozenWords.toggle(key);
+    }
+
+    // Force re-render by updating the extension options
+    editor.view.dispatch(
+      editor.state.tr.setMeta("combinedHighlighting", {
+        frozenWords: newWordSet,
+        frozenPhrases: newPhraseSet,
+      })
+    );
+    clearSelection();
+  };
+
   const clearSelection = () => {
     setAnchorEl(null);
     setSelectedWord("");
   };
 
   useEffect(() => {
+    if (!internalUpdate || !editor) return; // retun initially
+    editor.commands.setContent("");
     return () => editor?.destroy();
-  }, [editor]);
-
-  useEffect(() => {
-    if (editor && !isInternalUpdate.current && userInput !== editor.getHTML()) {
-      editor.commands.setContent(userInput);
-    }
-    isInternalUpdate.current = false; // reset flag
-  }, [userInput, editor]);
+  }, [editor, clearInput]);
 
   useEffect(() => {
     if (!editor) return;
@@ -147,35 +174,6 @@ function UserInputBox({
       );
     }
   }, [editor, formatedSentences, activeSentence, isInputFoucus]);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    const plugin = editor.extensionManager.extensions.find(
-      (ext) => ext.name === "combinedHighlighting"
-    );
-
-    if (!plugin) return;
-
-    // Overwrite the frozenWords and frozenPhrases directly
-    plugin.options.frozenWords = frozenWords.set;
-    plugin.options.frozenPhrases = frozenPhrases.set;
-
-    editor.view.dispatch(editor.state.tr); // ✅ trigger re-render
-  }, [frozenWords.set, frozenPhrases.set, editor]);
-
-  const handleToggleFreeze = () => {
-    const key = selectedWord.toLowerCase().trim();
-    const isPhrase = key.includes(" ");
-
-    if (isPhrase) {
-      frozenPhrases.toggle(key);
-    } else {
-      frozenWords.toggle(key);
-    }
-
-    clearSelection();
-  };
 
   const isFrozen = () => {
     const key = selectedWord.toLowerCase().trim();

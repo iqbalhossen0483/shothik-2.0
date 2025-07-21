@@ -20,7 +20,8 @@ export const toolsApiSlice = createApi({
     }),
     paraphraseForTagging: builder.mutation({
       query: (payload) => ({
-        url: `${process.env.NEXT_PUBLIC_PARAPHRASE_API_URI}/paraphrase-for-tagging`,
+        // url: `${process.env.NEXT_PUBLIC_PARAPHRASE_API_URI}/paraphrase-for-tagging`,
+        url: `/paraphrase-for-tagging`,
         method: "POST",
         body: payload,
       }),

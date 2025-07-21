@@ -77,6 +77,7 @@ const EditableOutput = ({
   const [input, setInput] = useState("");
   const theme = useTheme();
   const dark = theme.palette.mode === "dark";
+
   const editor = useEditor(
     {
       extensions: [
@@ -112,33 +113,34 @@ const EditableOutput = ({
 
   useEffect(() => {
     if (!editor || !data?.length) return;
-    const separator = language === "Bangla" ? "। " : ". ";
-    const newInputCount = input.split(separator).length;
-    //data.length === newInputCount &&
-    const shouldUpdate = !activeSentence || (activeSentence && !isOutputFoucus);
+    const sentences = [...data];
 
+    const separator = language === "Bangla" ? "। " : ". ";
+    const inputContent = input.split(separator).filter(Boolean);
+    const existingSentenceCount = data.length;
+    if (inputContent.length > existingSentenceCount) {
+      const newSentences = inputContent.slice(existingSentenceCount);
+      const newData = newSentences.map((sentence) => {
+        const words = sentence
+          .trim()
+          .split(/\s+/)
+          .map((word) => ({
+            word,
+            type: "none",
+            synonyms: [],
+          }));
+        return words;
+      });
+      sentences.push(...newData);
+    }
+
+    const shouldUpdate = !activeSentence || (activeSentence && !isOutputFoucus);
     if (shouldUpdate) {
       editor.commands.setContent(
-        generateFormatedText(data, activeSentence, dark)
+        generateFormatedText(sentences, activeSentence, dark)
       );
     }
-  }, [editor, data, activeSentence, isOutputFoucus, dark]);
-
-  // useEffect(() => {
-  //   if (!editor || !data?.length) return;
-  //   editor.commands.setContent(
-  //     generateFormatedText(data, activeSentence, dark)
-  //   );
-  // }, [editor, data]);
-
-  // useEffect(() => {
-  //   if (!editor) return;
-  //   if (!isOutputFoucus && activeSentence) {
-  //     editor.commands.setContent(
-  //       generateFormatedText(data, activeSentence, dark)
-  //     );
-  //   }
-  // }, [editor, activeSentence]);
+  }, [editor, data, activeSentence, isOutputFoucus]);
 
   useEffect(() => {
     if (!editor) return;
@@ -156,11 +158,11 @@ const EditableOutput = ({
       setAnchorEl(el);
       setSynonymsOptions({
         synonyms: wordObj.synonyms || [],
-        sentenceIndex,
-        wordIndex,
+        sentenceIndex: sentenceIndex - 1,
+        wordIndex: wordIndex - 1,
         showRephraseNav: true,
       });
-
+      console.log({ wordIndex });
       const sentence = data[sentenceIndex - 1].map((w) => w.word).join(" ");
       setSentence(sentence);
     };

@@ -60,7 +60,6 @@ const ParaphraseOutput = ({
             )
           : sentence
       );
-
       return newData;
     });
     setSynonymsOptions(synonymInit);
@@ -150,9 +149,11 @@ const ParaphraseOutput = ({
       setIsPending(true);
       setShowRephrase(true);
 
+      // const url =
+      //   process.env.NEXT_PUBLIC_PARAPHRASE_API_URI +
+      //   "/paraphrase-with-variantV2";
       const url =
-        process.env.NEXT_PUBLIC_PARAPHRASE_API_URI +
-        "/paraphrase-with-variantV2";
+        process.env.NEXT_PUBLIC_API_URI + "/paraphrase-with-variantV2";
       const token = localStorage.getItem("accessToken");
       const payload = {
         text: sentence,

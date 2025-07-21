@@ -111,15 +111,65 @@ export const CombinedHighlighting = Extension.create({
     };
   },
 
+  // addProseMirrorPlugins() {
+  //   return [
+  //     new Plugin({
+  //       key: new PluginKey("combinedHighlighting"),
+
+  //       props: {
+  //         decorations: (state) => {
+  //           return processDecorations(state.doc, this.options);
+  //         },
+  //       },
+  //     }),
+  //   ];
+  // },
   addProseMirrorPlugins() {
+    const pluginKey = new PluginKey("combinedHighlighting");
+
     return [
       new Plugin({
-        key: new PluginKey("combinedHighlighting"),
+        key: pluginKey,
+
+        state: {
+          init: (_, state) => ({
+            frozenWords: this.options.frozenWords,
+            frozenPhrases: this.options.frozenPhrases,
+            decorations: processDecorations(state.doc, {
+              limit: this.options.limit,
+              frozenWords: this.options.frozenWords,
+              frozenPhrases: this.options.frozenPhrases,
+            }),
+          }),
+
+          apply: (tr, pluginState, oldState, newState) => {
+            const meta = tr.getMeta("combinedHighlighting");
+
+            let frozenWords = pluginState.frozenWords;
+            let frozenPhrases = pluginState.frozenPhrases;
+
+            if (meta?.frozenWords) frozenWords = meta.frozenWords;
+            if (meta?.frozenPhrases) frozenPhrases = meta.frozenPhrases;
+
+            if (tr.docChanged || meta) {
+              return {
+                frozenWords,
+                frozenPhrases,
+                decorations: processDecorations(newState.doc, {
+                  limit: this.options.limit,
+                  frozenWords,
+                  frozenPhrases,
+                }),
+              };
+            }
+
+            return pluginState;
+          },
+        },
 
         props: {
-          decorations: (state) => {
-            return processDecorations(state.doc, this.options);
-          },
+          decorations: (state) =>
+            pluginKey.getState(state)?.decorations || DecorationSet.empty,
         },
       }),
     ];

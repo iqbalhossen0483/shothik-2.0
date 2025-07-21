@@ -78,6 +78,7 @@ const ParaphraseContend = () => {
   const enqueueSnackbar = useSnackbar();
   const dispatch = useDispatch();
   const outputRef = useRef(null);
+  const [clearInput, setClearInput] = useState(false);
   const [showMessage, setShowMessage] = useState({
     show: false,
     Component: null,
@@ -201,6 +202,7 @@ const ParaphraseContend = () => {
       frozenPhrases.reset(initialFrozenPhrase);
       setActiveSentence(0);
       setFormatedSentences([]);
+      setClearInput((prev) => !prev);
     }
     setResult([]);
     setOutputHistory([]);
@@ -357,6 +359,7 @@ const ParaphraseContend = () => {
                 isInputFoucus={isInputFoucus}
                 setIsInputFoucus={setIsInputFoucus}
                 language={language}
+                clearInput={clearInput}
               />
 
               {!userInput ? (
