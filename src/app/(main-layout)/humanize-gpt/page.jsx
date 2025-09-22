@@ -1,11 +1,10 @@
+import { humanizeFaq } from "@/_mock/tools/humanizefaq";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import HomeAdvertisement from "@/components/common/HomeAdvertisement";
+import ToolsCTA from "@/components/tools/common/ToolsCTA";
+import ToolsSepecigFaq from "@/components/tools/common/ToolsSepecigFaq";
+import HumanizedContend from "@/components/tools/humanize/HumanizedContend";
 import { Container } from "@mui/material";
-import { humanizeFaq } from "../../../_mock/tools/humanizefaq";
-import HomeAdvertisement from "../../../components/common/HomeAdvertisement";
-import ToolsCTA from "../../../components/tools/common/ToolsCTA";
-import ToolsSepecigFaq from "../../../components/tools/common/ToolsSepecigFaq";
-// import HumanizedContend from "../../../components/tools/humanize/HumanizedContend";
-import ErrorBoundary from "../../../components/common/ErrorBoundary";
-import HumanizedContend from "../../../components/tools/humanize/HumanizedContend";
 
 export async function generateMetadata() {
   return {
@@ -43,10 +42,10 @@ const Humanize = () => {
         <HumanizedContend />
       </ErrorBoundary>
       <ToolsSepecigFaq
-        tag='All you need to know about Humanize GPT feature'
+        tag="All you need to know about Humanize GPT feature"
         data={humanizeFaq}
       />
-      <ToolsCTA toolType='humanize' />
+      <ToolsCTA toolType="humanize" />
       <HomeAdvertisement />
 
       <div hidden>

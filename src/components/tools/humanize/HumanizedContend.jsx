@@ -1,17 +1,17 @@
 "use client";
 
+import { trySamples } from "@/_mock/trySamples";
+import { trackEvent } from "@/analysers/eventTracker";
+import useLoadingText from "@/hooks/useLoadingText";
+import useResponsive from "@/hooks/useResponsive";
+import useSnackbar from "@/hooks/useSnackbar";
+import useWordLimit from "@/hooks/useWordLimit";
+import { useHumanizeContendMutation } from "@/redux/api/tools/toolsApi";
+import { setShowLoginModal } from "@/redux/slice/auth";
+import { setAlertMessage, setShowAlert } from "@/redux/slice/tools";
 import { Card, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { trySamples } from "../../../_mock/trySamples";
-import { trackEvent } from "../../../analysers/eventTracker";
-import useLoadingText from "../../../hooks/useLoadingText";
-import useResponsive from "../../../hooks/useResponsive";
-import useSnackbar from "../../../hooks/useSnackbar";
-import useWordLimit from "../../../hooks/useWordLimit";
-import { useHumanizeContendMutation } from "../../../redux/api/tools/toolsApi";
-import { setShowLoginModal } from "../../../redux/slice/auth";
-import { setAlertMessage, setShowAlert } from "../../../redux/slice/tools";
 import UserActionInput from "../common/UserActionInput";
 import LanguageMenu from "../grammar/LanguageMenu";
 import AlertDialogMessage from "./AlertDialogMessage";
@@ -139,12 +139,12 @@ const HumanizedContend = () => {
           setCurrentLength={setCurrentLength}
         />
         <TextField
-          name='input'
-          variant='outlined'
+          name="input"
+          variant="outlined"
           rows={13}
           fullWidth
           multiline
-          placeholder='Enter your text here...'
+          placeholder="Enter your text here..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           disabled={showShalowAlert}

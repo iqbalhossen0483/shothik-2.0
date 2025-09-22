@@ -48,7 +48,7 @@ const ParaphraseOutput = ({
     showRephraseNav: false,
   };
   const [synonymsOptions, setSynonymsOptions] = useState(synonymInit);
-
+  console.log(anchorEl);
   const replaceSynonym = (newWord) => {
     setData((prevData) => {
       const newData = prevData.map((sentence, sIndex) =>

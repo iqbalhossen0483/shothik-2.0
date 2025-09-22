@@ -40,7 +40,7 @@ const generateFormatedText = (data, activeSentence, dark) => {
             "data-word-index": wIndex + 1,
             "data-type": word.type,
             class: "word-span",
-            style: `color:${getColorStyle(word.type, dark)};cursor:pointer`,
+            style: `color:${getColorStyle(word.type, dark)}`,
           },
           content: [
             {
@@ -162,14 +162,13 @@ const EditableOutput = ({
         wordIndex: wordIndex - 1,
         showRephraseNav: true,
       });
-      console.log({ wordIndex });
       const sentence = data[sentenceIndex - 1].map((w) => w.word).join(" ");
       setSentence(sentence);
     };
 
     dom.addEventListener("click", handleClick);
     return () => dom.removeEventListener("click", handleClick);
-  }, [editor, data]);
+  }, [editor]);
 
   return <EditorContent editor={editor} />;
 };

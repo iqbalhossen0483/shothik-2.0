@@ -28,17 +28,17 @@ const AlertDialogMessage = () => {
           boxShadow: 3,
         }}
       >
-        <Typography variant='h5'>Upgrade</Typography>
-        <Typography variant='body1' sx={{ xs: "14px", lg: "16px" }}>
+        <Typography variant="h5">Upgrade</Typography>
+        <Typography variant="body1" sx={{ xs: "14px", lg: "16px" }}>
           Unlock advanced features and enhance your paraphrasing experience.
         </Typography>
-        <Link href='/pricing'>
+        <Link href="/pricing">
           <Button
-            variant='contained'
-            color='primary'
+            variant="contained"
+            color="primary"
             sx={{ marginTop: "20px" }}
           >
-            <Diamond fontSize='small' sx={{ marginRight: "5px" }} />
+            <Diamond fontSize="small" sx={{ marginRight: "5px" }} />
             Upgrade to Premium
           </Button>
         </Link>
